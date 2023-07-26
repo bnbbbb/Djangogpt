@@ -1,31 +1,88 @@
-from django.shortcuts import render
-from django.conf import settings
+# from django.shortcuts import render
+# from django.views import View
 from dotenv import load_dotenv
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 import openai
 import os
+from .models import Conversation
+from .serializers import ConversationSerializer
 
-def chat_view(request):
-    load_dotenv()
-    openai.api_key = os.getenv('OPENAI_API_KEY')
-    print(openai.api_key)
-    # 사용자로부터 받은 입력을 가져옵니다.
-    user_input = request.POST.get('user_input', '')
 
-    # ChatGPT 모델을 초기화합니다.
-    model = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": user_input},
-        ]
-    )
+load_dotenv()
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
-    # ChatGPT를 사용하여 대화를 생성합니다.
-    chat_response = model['choices'][0]['message']['content']
 
-    context = {
-        'user_input': user_input,
-        'chat_response': chat_response
-    }
+# class ChatView(View):
+#     def get(self, request, *args, **kwargs):
+#         print(openai.api_key)
+#         conversations = request.session.get('conversations', [])
+#         return render(request, 'chat/chat.html', {'conversations': conversations})
 
-    return render(request, 'chat/chat.html', context)
+#     def post(self, request, *args, **kwargs):
+#         prompt = request.POST.get('prompt')
+#         if prompt:
+#             # 이전 대화 기록 가져오기
+#             session_conversations = request.session.get('conversations', [])
+#             previous_conversations = "\n".join([f"User: {c['prompt']}\nAI: {c['response']}" for c in session_conversations])
+#             prompt_with_previous = f"{previous_conversations}\nUser: {prompt}\nAI:"
+
+#             # ChatGPT와 상호작용하여 응답 받기
+#             model_engine = "text-davinci-003"
+#             completions = openai.Completion.create(
+#                 engine=model_engine,
+#                 prompt=prompt_with_previous,
+#                 max_tokens=1024,
+#                 n=5,
+#                 stop=None,
+#                 temperature=0.5,
+#             )
+#             response = completions.choices[0].text.strip()
+
+#             # 대화 기록에 새로운 응답 추가
+#             conversation = Conversation(prompt=prompt, response=response)
+#             conversation.save()
+
+#             session_conversations.append({'prompt': prompt, 'response': response})
+#             request.session['conversations'] = session_conversations
+#             request.session.modified = True
+
+#         return self.get(request, *args, **kwargs)
+
+class ChatView(APIView):
+    def get(self, request):
+        prompt = Conversation.objects.all()
+        serialized_prompt = ConversationSerializer(prompt, many = True) # 직렬화
+        return Response(serialized_prompt.data)
+    def post(self, request, *args, **kwargs):
+        prompt = request.data.get('prompt')
+        if prompt:
+            # 이전 대화 기록 가져오기
+            session_conversations = request.session.get('conversations', [])
+            previous_conversations = "\n".join([f"User: {c['prompt']}\nAI: {c['response']}" for c in session_conversations])
+            prompt_with_previous = f"{previous_conversations}\nUser: {prompt}\nAI:"
+
+            # ChatGPT와 상호작용하여 응답 받기
+            model_engine = "text-davinci-003"
+            completions = openai.Completion.create(
+                engine=model_engine,
+                prompt=prompt_with_previous,
+                max_tokens=1024,
+                n=5,
+                stop=None,
+                temperature=0.5,
+            )
+            response = completions.choices[0].text.strip()
+
+            # 대화 기록에 새로운 응답 추가
+            conversation = Conversation(prompt=prompt, response=response)
+            conversation.save()
+
+            session_conversations.append({'prompt': prompt, 'response': response})
+            request.session['conversations'] = session_conversations
+            request.session.modified = True
+
+            return Response({'response': response}, status=status.HTTP_200_OK)
+
+        return Response({'error': 'Prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)

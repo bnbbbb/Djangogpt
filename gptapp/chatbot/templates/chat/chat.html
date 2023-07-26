@@ -1,18 +1,17 @@
-<!-- chat/templates/chat.html -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>ChatGPT</title>
-</head>
-<body>
-    <h1>ChatGPT</h1>
+{% comment %} {% extends 'base.html' %} {% endcomment %}
+
+{% block content %}
+<h1>Chatbot</h1>
+    <div id="chatbox">
+        {% for conversation in conversations %}
+            <p><strong>User:</strong> {{ conversation.prompt }}</p>
+            <p><strong>Bot:</strong> {{ conversation.response }}</p>
+        {% endfor %}
+    </div>
     <form method="post">
         {% csrf_token %}
-        <label for="user_input">You:</label>
-        <input type="text" id="user_input" name="user_input" required>
+        <label for="prompt">You:</label>
+        <input type="text" id="prompt" name="prompt">
         <input type="submit" value="Send">
     </form>
-    <p>ChatGPT:</p>
-    <p>{{ chat_response }}</p>
-</body>
-</html>
+{% endblock %}

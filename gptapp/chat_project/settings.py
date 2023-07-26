@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+AUTH_USER_MODEL = 'user.User'
 
 # .env 파일이 있는 디렉토리로부터 .env 파일을 로드합니다.
 load_dotenv()
@@ -46,7 +47,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
     "chatbot",
+    "user",
 ]
 
 MIDDLEWARE = [
@@ -109,6 +112,35 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# REST FRAMEWORK
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASS':{
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.authentication.SessionAuthentication',
+    },
+    'DEFAULT_THROTTLE_RATES':{
+        'anon': '5/hour', # sec, min, hour, day 
+        'user': '20/hour',
+    }
+}
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# 세션 엔진 설정 (기본값은 django.contrib.sessions.backends.db)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# 세션 쿠키 이름 (기본값은 'sessionid')
+SESSION_COOKIE_NAME = 'sessionid'
+
+SESSION_COOKIE_AGE = 4 # 24h * 60m * 60s
+# 얼마나 유지 가능하게 할지에 대한 기한(쿠키 유효기한)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
