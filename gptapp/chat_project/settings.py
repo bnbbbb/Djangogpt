@@ -118,6 +118,7 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     },
     'DEFAULT_THROTTLE_RATES':{
         'anon': '5/hour', # sec, min, hour, day 
@@ -138,7 +139,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 # 세션 쿠키 이름 (기본값은 'sessionid')
 SESSION_COOKIE_NAME = 'sessionid'
 
-SESSION_COOKIE_AGE = 4 # 24h * 60m * 60s
+SESSION_COOKIE_AGE = 3600 # 24h * 60m * 60s
 # 얼마나 유지 가능하게 할지에 대한 기한(쿠키 유효기한)
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
