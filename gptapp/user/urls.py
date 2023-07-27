@@ -11,4 +11,7 @@ urlpatterns = [
     path('login/', views.Login.as_view(), name = 'login'),
     # # # 로그아웃
     path('logout/', views.Logout.as_view(), name = 'logout'),
+    # path('google/login', views.GoogleLoginView.as_view(), name='google_login'),
+    # path('google/callback/', views.GoogleCallbackView.as_view(), name='google_callback'),
+    # path('google/login/finish/', views.GoogleLogin.as_view(), name='google_login_todjango'),
 ]
