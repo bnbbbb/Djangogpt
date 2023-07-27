@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 import openai
 import os
 from .models import Conversation
@@ -49,9 +50,14 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 #             request.session.modified = True
 
 #         return self.get(request, *args, **kwargs)
+# class 
+
 
 class ChatView(APIView):
+    permission_classes = [IsAuthenticated]
+        
     def get(self, request):
+        
         prompt = Conversation.objects.all()
         serialized_prompt = ConversationSerializer(prompt, many = True) # 직렬화
         return Response(serialized_prompt.data)
@@ -86,3 +92,12 @@ class ChatView(APIView):
             return Response({'response': response}, status=status.HTTP_200_OK)
 
         return Response({'error': 'Prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChatList(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        pass
+    def post(self, request):
+        pass

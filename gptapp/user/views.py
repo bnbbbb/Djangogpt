@@ -1,15 +1,18 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.hashers import make_password
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
 from .serializers import UserSerializer, LoginSerializer
-from django.contrib.auth.hashers import make_password
 
 # Create your views here.
 
 ### Register
 class Register(APIView):
+    from rest_framework.permissions import AllowAny
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         # print(serializer)
@@ -41,7 +44,9 @@ class Login(APIView):
             print(f"인증된 유저? {user}")
             if user is not None:
                 login(request, user)
-                return Response({'message': '로그인에 성공하였습니다.'}, status=status.HTTP_200_OK)
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+                return Response({'message': '로그인에 성공하였습니다.', 'access_token': access_token}, status=status.HTTP_200_OK)
             else:
                 return Response({'message': '이메일 또는 비밀번호가 올바르지 않습니다.'}, status=status.HTTP_401_UNAUTHORIZED)
 
