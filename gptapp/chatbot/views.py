@@ -1,3 +1,4 @@
+
 from django.shortcuts import render
 from django.views import View
 from rest_framework.views import APIView
@@ -8,6 +9,8 @@ from .models import Conversation
 from .serializers import ConversationSerializer, ChatSerializer
 from dotenv import load_dotenv
 from .models import Chat, Conversation
+from django.contrib.auth import get_user_model
+
 import openai
 import os
 
@@ -15,10 +18,10 @@ import os
 load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-
+User = get_user_model()
 
 class ChatView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get_user_call_count(self, request):
         # 사용자별 세션 변수 이름 설정
@@ -41,15 +44,23 @@ class ChatView(APIView):
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
-        prompt = request.data.get('prompt')
-        sender = request.user
-
+        # print(request.data[-1]['prompt'])
+        # print(request.data[-1]['prompt'])
+        print(request.data)
+        prompt = request.data[-1].get('prompt')
+        # prompt = request.data.get('prompt')
+        print(prompt)
+        sender = request.META.get('HTTP_USER_EMAIL')
+        print(sender)
+        print(request.META.get("HTTP_X_CSRFTOKEN"))
+        # print(request.META)
+        sender = User.objects.get(email= sender)
         if prompt:
             # 이전 대화 기록 가져오기
             session_conversations = request.session.get('conversations', [])
             previous_conversations = "\n".join([f"User: {c['prompt']}\nAI: {c['response']}" for c in session_conversations])
             prompt_with_previous = f"{previous_conversations}\nUser: {prompt}\nAI:"
-
+            # print(previous_conversations)
             # ChatGPT와 상호작용하여 응답 받기
             model_engine = "text-davinci-003"
             completions = openai.Completion.create(
@@ -61,7 +72,7 @@ class ChatView(APIView):
                 temperature=0.5,
             )
             response = completions.choices[0].text.strip()
-
+            print('response',response)
             # 사용자의 호출 횟수 확인
             call_count = self.get_user_call_count(request)
 
@@ -83,12 +94,14 @@ class ChatView(APIView):
                 'chat': chat.id,
                 'call_count':call_count,
             }
-
+            # print( conversation_data)
             serializer = ConversationSerializer(data=conversation_data)
+            print('serializer', serializer)
             if serializer.is_valid():
                 serializer.save()
 
                 session_conversations.append({'prompt': prompt, 'response': response})
+                print('session_conversations', session_conversations)
                 request.session['conversations'] = session_conversations
                 request.session.modified = True
 
@@ -122,7 +135,7 @@ class NewChat(APIView):
 
         # 새로운 채팅 생성
         chat = Chat.objects.create(title=chat_title)
-        chat.participants.add(sender)
+        chat.participants.add(request.user)
 
         # ChatSerializer를 사용하여 채팅 정보를 직렬화하고 응답 데이터로 반환
         serializer = ChatSerializer(chat)
