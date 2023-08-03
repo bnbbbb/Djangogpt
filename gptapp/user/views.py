@@ -39,12 +39,13 @@ class Register(APIView):
 ### Login
 class Login(APIView):
     def post(self, request):
+
         if request.user.is_authenticated:
             print(request.user)
             return Response({'detail': '이미 인증된 사용자입니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = LoginSerializer(data=request.data)
-        print(f"시리얼라이저는 유효한가? {serializer.is_valid()}")
+        # print(f"시리얼라이저는 유효한가? {serializer.is_valid()}")
         if serializer.is_valid():
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
@@ -63,7 +64,7 @@ class Login(APIView):
             else:
                 return Response({'message': '이메일 또는 비밀번호가 올바르지 않습니다.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        print(f"시리얼 라이저 에러: {serializer.errors}")
+        # print(f"시리얼 라이저 에러: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
