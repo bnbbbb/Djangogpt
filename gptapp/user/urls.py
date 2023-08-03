@@ -14,4 +14,5 @@ urlpatterns = [
     # path('google/login', views.GoogleLoginView.as_view(), name='google_login'),
     # path('google/callback/', views.GoogleCallbackView.as_view(), name='google_callback'),
     # path('google/login/finish/', views.GoogleLogin.as_view(), name='google_login_todjango'),
+    path('csrftoken/', views.get_csrf_token, name='get_csrf_token'),
 ]

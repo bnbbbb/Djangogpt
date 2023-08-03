@@ -17,6 +17,7 @@ from django.views import View
 from .models import User
 import requests
 from rest_framework.permissions import AllowAny
+from django.middleware.csrf import get_token
 
 import os
 
@@ -34,6 +35,11 @@ class Register(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         # 유효하지 않은 데이터인 경우, 오류 응답 반환
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+def get_csrf_token(request):
+    csrf_token = get_token(request)
+    print(csrf_token)
+    return JsonResponse({'csrfToken': csrf_token})
 
 
 ### Login
@@ -71,6 +77,7 @@ class Login(APIView):
 class Logout(APIView):
     def get(self, request):
         print(request.user)
+        # print(request.META)
         logout(request)
         return Response({'message': '로그아웃에 성공하였습니다.'}, status=status.HTTP_200_OK)
 
